@@ -1,0 +1,87 @@
+---
+- hosts: rasp
+  tasks:
+    - name: Only run "update_cache=yes" if the last one is more than 3600 seconds ago
+      apt: update_cache=yes cache_valid_time=3600
+      become: true
+    - name: Instalando Aplicaciones.  
+      apt: 
+        pkg:
+        - docker.io
+        - docker-compose
+        - vim 
+        - git
+        - python3-venv 
+        - python3-pip
+        - python3-setuptools
+        state: present
+      become: true
+    - name: Agregando usuario al group docker
+      ansible.builtin.user:
+        name: pi
+        groups: docker
+        append: yes
+      become: true
+    - name: Creando directorios para los Container.
+      file:
+        path: /home/pi/docker/portainer
+        state: directory
+        owner: pi 
+        group: pi
+        mode: 0775
+        recurse: yes
+      become_user: pi
+    - name: Creando directorios para los Pihole.
+      file:
+        path: /home/pi/docker/pihole
+        state: directory
+        owner: pi 
+        group: pi
+        mode: 0775
+        recurse: yes
+      become_user: pi
+    - name: Creando directorios para los Netdata.
+      file:
+        path: /home/pi/docker/netdata
+        state: directory
+        owner: pi 
+        group: pi
+        mode: 0775
+        recurse: yes
+      become_user: pi
+    - name: Clonando el repo de Portainer
+      ansible.builtin.git:
+        clone: yes
+        repo: https://github.com/pepoangel/portainer.git 
+        dest: /home/pi/docker/portainer
+        update: yes
+        force: yes
+    - name: Clonando el repo de Pihole
+      ansible.builtin.git:
+        clone: yes
+        repo: https://github.com/pepoangel/pihole.git
+        dest: /home/pi/docker/pihole
+        update: yes
+        force: yes
+    - name: Clonando el repo de Netdata
+      ansible.builtin.git:
+        clone: yes
+        repo: https://github.com/pepoangel/Netdata.git
+        dest: /home/pi/docker/netdata
+        update: yes
+        force: yes
+    - name: Run `docker-compose up` Portainer
+      community.docker.docker_compose:
+        project_src: /home/pi/docker/portainer 
+        build: yes 
+      register: output
+    - name: Run `docker-compose up` Pihole
+      community.docker.docker_compose:
+        project_src: /home/pi/docker/pihole 
+        build: yes 
+      register: output
+    - name: Run `docker-compose up` Netdata
+      community.docker.docker_compose:
+        project_src: /home/pi/docker/netdata 
+        build: yes 
+      register: output
