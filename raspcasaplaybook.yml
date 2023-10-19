@@ -1,87 +1,96 @@
 ---
-- hosts: rasp
+- name: Playbook para la raspberry
+  become: true
+  become_user: "{{ ansible_user }}"
+  hosts: all
+  vars_files:
+    - packages.yaml
   tasks:
-    - name: Only run "update_cache=yes" if the last one is more than 3600 seconds ago
-      apt: update_cache=yes cache_valid_time=3600
+    - name: Only run "update_cache=true" if the last one is more than 3600 seconds ago
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
       become: true
-    - name: Instalando Aplicaciones.  
-      apt: 
-        pkg:
-        - docker.io
-        - docker-compose
-        - vim 
-        - git
-        - python3-venv 
-        - python3-pip
-        - python3-setuptools
+    - name: Instalando Aplicaciones
+      ansible.builtin.apt:
+        pkg: "{{ packages_to_install }}"
         state: present
       become: true
     - name: Agregando usuario al group docker
       ansible.builtin.user:
-        name: pi
+        name: "{{ ansible_user }}"
         groups: docker
-        append: yes
+        append: true
+      become: true
+    - name: Agregando usuario al group docker
+      ansible.builtin.user:
+        name: "{{ ansible_user }}"
+        groups: docker
+        append: true
       become: true
     - name: Creando directorios para los Container.
-      file:
-        path: /home/pi/docker/portainer
+      ansible.builtin.file:
+        path: /home/{{ ansible_user }}/docker/portainer
         state: directory
-        owner: pi 
-        group: pi
-        mode: 0775
-        recurse: yes
-      become_user: pi
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: "0775"
+        recurse: true
+      become_user: "{{ ansible_user }}"
     - name: Creando directorios para los Pihole.
-      file:
-        path: /home/pi/docker/pihole
+      ansible.builtin.file:
+        path: /home/{{ ansible_user }}/docker/pihole
         state: directory
-        owner: pi 
-        group: pi
-        mode: 0775
-        recurse: yes
-      become_user: pi
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: "0775"
+        recurse: true
+      become_user: "{{ ansible_user }}"
     - name: Creando directorios para los Netdata.
-      file:
-        path: /home/pi/docker/netdata
+      ansible.builtin.file:
+        path: /home/{{ ansible_user }}/docker/netdata
         state: directory
-        owner: pi 
-        group: pi
-        mode: 0775
-        recurse: yes
-      become_user: pi
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: "0775"
+        recurse: true
+      become_user: "{{ ansible_user }}"
     - name: Clonando el repo de Portainer
       ansible.builtin.git:
-        clone: yes
-        repo: https://github.com/pepoangel/portainer.git 
-        dest: /home/pi/docker/portainer
-        update: yes
-        force: yes
+        clone: true
+        repo: https://github.com/pepoangel/portainer.git
+        version: master
+        dest: /home/{{ ansible_user }}/docker/portainer
+        update: true
+        force: true
     - name: Clonando el repo de Pihole
       ansible.builtin.git:
-        clone: yes
+        clone: true
         repo: https://github.com/pepoangel/pihole.git
-        dest: /home/pi/docker/pihole
-        update: yes
-        force: yes
+        dest: /home/{{ ansible_user }}/docker/pihole
+        version: master
+        update: true
+        force: true
     - name: Clonando el repo de Netdata
       ansible.builtin.git:
-        clone: yes
+        clone: true
         repo: https://github.com/pepoangel/Netdata.git
-        dest: /home/pi/docker/netdata
-        update: yes
-        force: yes
+        dest: /home/{{ ansible_user }}/docker/netdata
+        version: master
+        update: true
+        force: true
     - name: Run `docker-compose up` Portainer
       community.docker.docker_compose:
-        project_src: /home/pi/docker/portainer 
-        build: yes 
+        project_src: /home/{{ ansible_user }}/docker/portainer
+        build: true
       register: output
     - name: Run `docker-compose up` Pihole
       community.docker.docker_compose:
-        project_src: /home/pi/docker/pihole 
-        build: yes 
+        project_src: /home/{{ ansible_user }}/docker/pihole
+        build: true
       register: output
     - name: Run `docker-compose up` Netdata
       community.docker.docker_compose:
-        project_src: /home/pi/docker/netdata 
-        build: yes 
+        project_src: /home/{{ ansible_user }}/docker/netdata
+        build: true
       register: output

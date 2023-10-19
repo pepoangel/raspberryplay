@@ -1,0 +1,10 @@
+---
+packages_to_install:
+  - docker.io
+  - docker-compose
+  - vim
+  - git
+  - python3-venv
+  - python3-pip
+  - python3-setuptools
+ansible_user: vagrant  # Usuario que ejecutará el playbook
